@@ -10,7 +10,7 @@ body {
 
 #main {
     position: relative;
-    margin: 0 auto;
+    margin: 0 0;
     width: 712px;
     height: 1138px;
     background-color: azure;
