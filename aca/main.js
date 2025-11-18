@@ -1,171 +1,244 @@
-import {
-  Engine,
-  Render,
-  Runner,
-  Bodies,
-  World,
-  Body,
-  Sleeping,
-  Events,
-} from "matter-js";
-import { FRUITS } from "./fruits";
+//import { Bodies, Body, Engine, Events, Render, Runner, World } from "matter-js";
+//import { FRUITS_BASE, ITEMS_ACA } from "./fruits";
+
+const Engine = Matter.Engine,
+    Render = Matter.Render,
+    World = Matter.World,
+    Bodies = Matter.Bodies,
+    Body = Matter.Body,
+    Runner = Matter.Runner,
+    Events = Matter.Events; // 시뮬레이션 루프를 위한 Runner 모듈 추가
+
+
+const ITEMS_ACA = [
+  {
+    name: "items/00_item",
+    radius: 33 / 2,
+  },
+  {
+    name: "items/01_item",
+    radius: 43 / 2,
+  },
+  {
+    name: "items/02_item",
+    radius: 61 / 2,
+  },
+  {
+    name: "items/03_item",
+    radius: 76 / 2,
+  },
+  {
+    name: "items/04_item",
+    radius: 95 / 2,
+  },
+  {
+    name: "items/05_item",
+    radius: 117 / 2,
+  },
+  {
+    name: "items/06_item",
+    radius: 137 / 2,
+  },
+  {
+    name: "items/07_item",
+    radius: 161 / 2,
+  },
+  {
+    name: "items/08_item",
+    radius: 204 / 2,
+  },
+  {
+    name: "items/09_item",
+    radius: 220 / 2,
+  },
+  {
+    name: "items/10_item",
+    radius: 260 / 2,
+  },
+];
+
+
+let FRUITS = ITEMS_ACA;
+
+const scoreText = document.getElementById('score');
+
+// 캔버스 크기
+const cw = 712;
+const ch = 1138;
+
+// 가로라인 두께
+const ww = 30;
+
+// 데드라인 위치. 맨 위가 0
+const deadline = 1000;
+
+const bgColor = "#F7F4C8";
+const lineColor = "#E6B143";
+
+let score = 0;
+
 
 const engine = Engine.create();
+const container = document.getElementById('main');
+
 const render = Render.create({
-  engine,
-  element: document.body,
+  engine: engine,
+  element: container,
   options: {
     wireframes: false,
-    background: "#F7F4C8",
-    width: 620,
-    height: 850,
-  },
+    background: bgColor,
+    width: cw,
+    height: ch,
+  }
 });
 
 const world = engine.world;
 
-const ground = Bodies.rectangle(310, 820, 620, 60, {
+const leftWall = Bodies.rectangle(ww/2, ch/2, ww, ch, {
   isStatic: true,
-  render: {
-    fillStyle: "#E6B143",
-  },
-});
-const leftWall = Bodies.rectangle(15, 395, 30, 790, {
-  isStatic: true,
-  render: {
-    fillStyle: "#E6B143",
-  },
-});
-const rightWall = Bodies.rectangle(605, 395, 30, 790, {
-  isStatic: true,
-  render: {
-    fillStyle: "#E6B143",
-  },
-});
-const topLine = Bodies.rectangle(310, 150, 620, 2, {
-  isStatic: true,
-  isSensor: true,
-  render: { fillStyle: "#E6B143" },
-  label: "topLine",
+  render: { fillStyle: lineColor }
 });
 
-World.add(world, [ground, leftWall, rightWall, topLine]);
+const rightWall = Bodies.rectangle(cw-ww/2, ch/2, ww, ch, {
+  isStatic: true,
+  render: { fillStyle: lineColor }
+});
+
+const ground = Bodies.rectangle(cw/2, ch-ww, cw, 60, {
+  isStatic: true,
+  render: { fillStyle: lineColor }
+});
+
+const topLine = Bodies.rectangle(cw/2, deadline, cw, 2, {
+  name: "topLine",
+  isStatic: true,
+  isSensor: true,
+  render: { fillStyle: lineColor }
+})
+
+World.add(world, [leftWall, rightWall, ground, topLine]);
 
 Render.run(render);
 Runner.run(engine);
 
 let currentBody = null;
 let currentFruit = null;
-let interval = null;
 let disableAction = false;
+let interval = null;
 
-function addCurrentFruit() {
-  const randomFruit = getRandomFruit();
+function addFruit() {
+  const index = Math.floor(Math.random() * 5);
+  const fruit = FRUITS[index];
 
-  const body = Bodies.circle(300, 50, randomFruit.radius, {
-    label: randomFruit.label,
+  const body = Bodies.circle(300, 50, fruit.radius, {
+    index: index,
     isSleeping: true,
     render: {
-      fillStyle: randomFruit.color,
-      sprite: { texture: `/${randomFruit.label}.png` },
+      sprite: { texture: `${fruit.name}.png` }
     },
     restitution: 0.2,
   });
 
   currentBody = body;
-  currentFruit = randomFruit;
+  currentFruit = fruit;
 
   World.add(world, body);
 }
 
-function getRandomFruit() {
-  const randomIndex = Math.floor(Math.random() * 5);
-  const fruit = FRUITS[randomIndex];
-
-  if (currentFruit && currentFruit.label === fruit.label)
-    return getRandomFruit();
-
-  return fruit;
-}
-
 window.onkeydown = (event) => {
-  if (disableAction) return;
+  if (disableAction) {
+    return;
+  }
 
   switch (event.code) {
-    case "ArrowLeft":
-      if (interval) return;
+    case "KeyA":
+      if (interval)
+        return;
+
       interval = setInterval(() => {
-        if (currentBody.position.x - 20 > 30)
+        if (currentBody.position.x - currentFruit.radius > ww)
           Body.setPosition(currentBody, {
             x: currentBody.position.x - 1,
             y: currentBody.position.y,
           });
       }, 5);
       break;
-    case "ArrowRight":
-      if (interval) return;
+
+    case "KeyD":
+      if (interval)
+        return;
+
       interval = setInterval(() => {
-        if (currentBody.position.x + 20 < 590)
-          Body.setPosition(currentBody, {
-            x: currentBody.position.x + 1,
-            y: currentBody.position.y,
-          });
+        if (currentBody.position.x + currentFruit.radius < cw-ww)
+        Body.setPosition(currentBody, {
+          x: currentBody.position.x + 1,
+          y: currentBody.position.y,
+        });
       }, 5);
       break;
-    case "Space":
+
+    case "KeyS":
+      currentBody.isSleeping = false;
       disableAction = true;
-      Sleeping.set(currentBody, false);
+
       setTimeout(() => {
-        addCurrentFruit();
+        addFruit();
         disableAction = false;
       }, 1000);
+      break;
   }
-};
+}
 
 window.onkeyup = (event) => {
   switch (event.code) {
-    case "ArrowLeft":
-    case "ArrowRight":
+    case "KeyA":
+    case "KeyD":
       clearInterval(interval);
       interval = null;
   }
-};
+}
 
 Events.on(engine, "collisionStart", (event) => {
   event.pairs.forEach((collision) => {
-    if (collision.bodyA.label === collision.bodyB.label) {
+    if (collision.bodyA.index === collision.bodyB.index) {
+      const index = collision.bodyA.index;
+
+      // 같은 아이템인 경우 score +1
+      score += 1;
+      scoreText.innerText = score;
+      console.log(score);
+
+      if (index === FRUITS.length - 1) {
+        return;
+      }
+
       World.remove(world, [collision.bodyA, collision.bodyB]);
 
-      const index = FRUITS.findIndex(
-        (fruit) => fruit.label === collision.bodyA.label
-      );
-
-      // If last fruit, do nothing
-      if (index === FRUITS.length - 1) return;
-
       const newFruit = FRUITS[index + 1];
-      const body = Bodies.circle(
+
+      const newBody = Bodies.circle(
         collision.collision.supports[0].x,
         collision.collision.supports[0].y,
         newFruit.radius,
         {
           render: {
-            fillStyle: newFruit.color,
-            sprite: { texture: `/${newFruit.label}.png` },
+            sprite: { texture: `${newFruit.name}.png` }
           },
-          label: newFruit.label,
+          index: index + 1,
         }
       );
-      World.add(world, body);
+
+      World.add(world, newBody);
     }
+
+    // topLine을 넘어가면 게임 끝. 페이지 리로딩
     if (
-      (collision.bodyA.label === "topLine" ||
-        collision.bodyB.label === "topLine") &&
-      !disableAction
-    ) {
+      !disableAction &&
+      (collision.bodyA.name === "topLine" || collision.bodyB.name === "topLine")) {
       alert("Game over");
+      location.reload(true);
     }
   });
 });
 
-addCurrentFruit();
+addFruit();
