@@ -1,315 +1,171 @@
-//import { Bodies, Body, Engine, Events, Render, Runner, World } from "matter-js";
-//import { FRUITS_BASE, ITEMS_ACA } from "./fruits";
-
-var Engine = Matter.Engine,
-    Render = Matter.Render,
-    World = Matter.World,
-    Bodies = Matter.Bodies,
-    Body = Matter.Body,
-    Runner = Matter.Runner,
-    Events = Matter.Events; // 시뮬레이션 루프를 위한 Runner 모듈 추가
-
-
-const ITEMS_ACA = [
-  {
-    name: "aca/00_item",
-    radius: 33 / 2,
-  },
-  {
-    name: "aca/01_item",
-    radius: 43 / 2,
-  },
-  {
-    name: "aca/02_item",
-    radius: 61 / 2,
-  },
-  {
-    name: "aca/03_item",
-    radius: 76 / 2,
-  },
-  {
-    name: "aca/04_item",
-    radius: 95 / 2,
-  },
-  {
-    name: "aca/05_item",
-    radius: 117 / 2,
-  },
-  {
-    name: "aca/06_item",
-    radius: 137 / 2,
-  },
-  {
-    name: "aca/07_item",
-    radius: 161 / 2,
-  },
-  {
-    name: "aca/08_item",
-    radius: 204 / 2,
-  },
-  {
-    name: "aca/09_item",
-    radius: 220 / 2,
-  },
-  {
-    name: "aca/10_item",
-    radius: 260 / 2,
-  },
-];
-
-const FRUITS_BASE = [
-  {
-    name: "base/00_cherry",
-    radius: 33 / 2,
-  },
-  {
-    name: "base/01_strawberry",
-    radius: 48 / 2,
-  },
-  {
-    name: "base/02_grape",
-    radius: 61 / 2,
-  },
-  {
-    name: "base/03_gyool",
-    radius: 69 / 2,
-  },
-  {
-    name: "base/04_orange",
-    radius: 89 / 2,
-  },
-  {
-    name: "base/05_apple",
-    radius: 114 / 2,
-  },
-  {
-    name: "base/06_pear",
-    radius: 129 / 2,
-  },
-  {
-    name: "base/07_peach",
-    radius: 156 / 2,
-  },
-  {
-    name: "base/08_pineapple",
-    radius: 177 / 2,
-  },
-  {
-    name: "base/09_melon",
-    radius: 220 / 2,
-  },
-  {
-    name: "base/10_watermelon",
-    radius: 259 / 2,
-  },
-];
-
-
-
-
-
-
-
-
-
-
-
-
-let THEME = "aca"; // { base, aca }
-
-let FRUITS = FRUITS_BASE;
-
-const scoreText = document.getElementById('score');
-
-// 캔버스 크기
-const cw = 712;
-const ch = 1138;
-
-// 가로라인 두께
-const ww = 30;
-
-// 데드라인 위치. 맨 위가 0
-const deadline = 1000;
-
-const bgColor = "#F7F4C8";
-const lineColor = "#E6B143";
-
-let score = 0;
-
-switch (THEME) {
-  case "base":
-    FRUITS = FRUITS_BASE;
-    break;
-
-  case "aca":
-    FRUITS = ITEMS_ACA;
-    break;
-  
-  default:
-    FRUITS = ITEMS_ACA;
-}
+import {
+  Engine,
+  Render,
+  Runner,
+  Bodies,
+  World,
+  Body,
+  Sleeping,
+  Events,
+} from "matter-js";
+import { FRUITS } from "./fruits";
 
 const engine = Engine.create();
-const container = document.getElementById('main');
-
 const render = Render.create({
-  engine: engine,
-  element: container,
+  engine,
+  element: document.body,
   options: {
     wireframes: false,
-    background: bgColor,
-    width: cw,
-    height: ch,
-  }
+    background: "#F7F4C8",
+    width: 620,
+    height: 850,
+  },
 });
 
 const world = engine.world;
 
-const leftWall = Bodies.rectangle(ww/2, ch/2, ww, ch, {
+const ground = Bodies.rectangle(310, 820, 620, 60, {
   isStatic: true,
-  render: { fillStyle: lineColor }
+  render: {
+    fillStyle: "#E6B143",
+  },
 });
-
-const rightWall = Bodies.rectangle(cw-ww/2, ch/2, ww, ch, {
+const leftWall = Bodies.rectangle(15, 395, 30, 790, {
   isStatic: true,
-  render: { fillStyle: lineColor }
+  render: {
+    fillStyle: "#E6B143",
+  },
 });
-
-const ground = Bodies.rectangle(cw/2, ch-ww, cw, 60, {
+const rightWall = Bodies.rectangle(605, 395, 30, 790, {
   isStatic: true,
-  render: { fillStyle: lineColor }
+  render: {
+    fillStyle: "#E6B143",
+  },
 });
-
-const topLine = Bodies.rectangle(cw/2, deadline, cw, 2, {
-  name: "topLine",
+const topLine = Bodies.rectangle(310, 150, 620, 2, {
   isStatic: true,
   isSensor: true,
-  render: { fillStyle: lineColor }
-})
+  render: { fillStyle: "#E6B143" },
+  label: "topLine",
+});
 
-World.add(world, [leftWall, rightWall, ground, topLine]);
+World.add(world, [ground, leftWall, rightWall, topLine]);
 
 Render.run(render);
 Runner.run(engine);
 
 let currentBody = null;
 let currentFruit = null;
-let disableAction = false;
 let interval = null;
+let disableAction = false;
 
-function addFruit() {
-  const index = Math.floor(Math.random() * 5);
-  const fruit = FRUITS[index];
+function addCurrentFruit() {
+  const randomFruit = getRandomFruit();
 
-  const body = Bodies.circle(300, 50, fruit.radius, {
-    index: index,
+  const body = Bodies.circle(300, 50, randomFruit.radius, {
+    label: randomFruit.label,
     isSleeping: true,
     render: {
-      sprite: { texture: `${fruit.name}.png` }
+      fillStyle: randomFruit.color,
+      sprite: { texture: `/${randomFruit.label}.png` },
     },
     restitution: 0.2,
   });
 
   currentBody = body;
-  currentFruit = fruit;
+  currentFruit = randomFruit;
 
   World.add(world, body);
 }
 
+function getRandomFruit() {
+  const randomIndex = Math.floor(Math.random() * 5);
+  const fruit = FRUITS[randomIndex];
+
+  if (currentFruit && currentFruit.label === fruit.label)
+    return getRandomFruit();
+
+  return fruit;
+}
+
 window.onkeydown = (event) => {
-  if (disableAction) {
-    return;
-  }
+  if (disableAction) return;
 
   switch (event.code) {
-    case "KeyA":
-      if (interval)
-        return;
-
+    case "ArrowLeft":
+      if (interval) return;
       interval = setInterval(() => {
-        if (currentBody.position.x - currentFruit.radius > ww)
+        if (currentBody.position.x - 20 > 30)
           Body.setPosition(currentBody, {
             x: currentBody.position.x - 1,
             y: currentBody.position.y,
           });
       }, 5);
       break;
-
-    case "KeyD":
-      if (interval)
-        return;
-
+    case "ArrowRight":
+      if (interval) return;
       interval = setInterval(() => {
-        if (currentBody.position.x + currentFruit.radius < cw-ww)
-        Body.setPosition(currentBody, {
-          x: currentBody.position.x + 1,
-          y: currentBody.position.y,
-        });
+        if (currentBody.position.x + 20 < 590)
+          Body.setPosition(currentBody, {
+            x: currentBody.position.x + 1,
+            y: currentBody.position.y,
+          });
       }, 5);
       break;
-
-    case "KeyS":
-      currentBody.isSleeping = false;
+    case "Space":
       disableAction = true;
-
+      Sleeping.set(currentBody, false);
       setTimeout(() => {
-        addFruit();
+        addCurrentFruit();
         disableAction = false;
       }, 1000);
-      break;
   }
-}
+};
 
 window.onkeyup = (event) => {
   switch (event.code) {
-    case "KeyA":
-    case "KeyD":
+    case "ArrowLeft":
+    case "ArrowRight":
       clearInterval(interval);
       interval = null;
   }
-}
+};
 
 Events.on(engine, "collisionStart", (event) => {
   event.pairs.forEach((collision) => {
-    if (collision.bodyA.index === collision.bodyB.index) {
-      const index = collision.bodyA.index;
-
-      // 같은 아이템인 경우 score +1
-      score += 1;
-      scoreText.innerText = score;
-      console.log(score);
-
-      if (index === FRUITS.length - 1) {
-        return;
-      }
-
+    if (collision.bodyA.label === collision.bodyB.label) {
       World.remove(world, [collision.bodyA, collision.bodyB]);
 
-      const newFruit = FRUITS[index + 1];
+      const index = FRUITS.findIndex(
+        (fruit) => fruit.label === collision.bodyA.label
+      );
 
-      const newBody = Bodies.circle(
+      // If last fruit, do nothing
+      if (index === FRUITS.length - 1) return;
+
+      const newFruit = FRUITS[index + 1];
+      const body = Bodies.circle(
         collision.collision.supports[0].x,
         collision.collision.supports[0].y,
         newFruit.radius,
         {
           render: {
-            sprite: { texture: `${newFruit.name}.png` }
+            fillStyle: newFruit.color,
+            sprite: { texture: `/${newFruit.label}.png` },
           },
-          index: index + 1,
+          label: newFruit.label,
         }
       );
-
-      World.add(world, newBody);
+      World.add(world, body);
     }
-
-    // topLine을 넘어가면 게임 끝. 페이지 리로딩
     if (
-      !disableAction &&
-      (collision.bodyA.name === "topLine" || collision.bodyB.name === "topLine")) {
+      (collision.bodyA.label === "topLine" ||
+        collision.bodyB.label === "topLine") &&
+      !disableAction
+    ) {
       alert("Game over");
-      location.reload(true);
     }
   });
 });
 
-addFruit();
+addCurrentFruit();
