@@ -7,6 +7,8 @@ const Engine = Matter.Engine,
     Bodies = Matter.Bodies,
     Body = Matter.Body,
     Runner = Matter.Runner,
+    Mouse = Matter.Mouse,
+    MouseConstraint = Matter.MouseConstraint,
     Events = Matter.Events; // 시뮬레이션 루프를 위한 Runner 모듈 추가
 
 
@@ -73,12 +75,13 @@ const ch = 1138;
 const ww = 30;
 
 // 데드라인 위치. 맨 위가 0
-const deadline = 1000;
+const deadline = 200;
 
 const bgColor = "#F7F4C8";
 const lineColor = "#E6B143";
 
 let score = 0;
+
 
 
 const engine = Engine.create();
@@ -129,6 +132,69 @@ let currentFruit = null;
 let disableAction = false;
 let interval = null;
 
+
+
+// Matter.js Mouse Constraint 추가
+
+// 캔버스에 마우스 입력 바인딩
+const mouse = Mouse.create(render.canvas);
+
+// MouseConstraint 생성
+const mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+        // 드래그 시 마우스와 바디 사이의 연결(constraint) 설정
+        stiffness: 0.2, // 강성 (얼마나 뻣뻣하게 연결되는지)
+        render: {
+            visible: false // 연결선 숨기기
+        }
+    }
+});
+
+// MouseConstraint를 월드에 추가
+World.add(world, mouseConstraint);
+
+// 고해상도 디스플레이(예: 레티나)를 위한 픽셀 비율 설정 (선택 사항)
+// mouse.pixelRatio = window.devicePixelRatio; 
+
+
+
+/*** 마우스 드래그 이벤트 처리 *******/
+
+// beforeUpdate 이벤트에 핸들러 등록
+/*Events.on(engine, 'beforeUpdate', function() {
+    // 마우스가 바디를 잡고 있을 때만 y 위치를 고정
+    if (mouseConstraint.body === constrainedBody) {
+        // 초기 y 위치 또는 고정하려는 특정 y 위치로 설정
+        Matter.Body.setPosition(constrainedBody, { 
+            x: constrainedBody.position.x, 
+            y: 100 // 고정하려는 y 좌표
+        });
+    }
+});*/
+
+// 드래그 시작 이벤트
+Matter.Events.on(mouseConstraint, 'startdrag', function(event) {
+    console.log('드래그 시작:', event.body.id);
+});
+
+// 드래그 종료 이벤트
+Matter.Events.on(mouseConstraint, 'enddrag', function(event) {
+    console.log('드래그 종료:', event.body.id);
+    currentBody.isSleeping = false;
+      disableAction = true;
+
+      setTimeout(() => {
+        addFruit();
+        disableAction = false;
+      }, 1000);
+});
+
+
+
+
+
+
 function addFruit() {
   const index = Math.floor(Math.random() * 5);
   const fruit = FRUITS[index];
@@ -148,6 +214,8 @@ function addFruit() {
   World.add(world, body);
 }
 
+
+/*
 window.onmousemove = (event) => {
   if(isMoving) {
     Body.setPosition(currentBody, {
@@ -155,10 +223,6 @@ window.onmousemove = (event) => {
             y: currentBody.position.y,
           });
   }
-  /*Body.setPosition(currentBody, {
-            x: event.clientX,
-            y: currentBody.position.y,
-          });*/
 }
 
 window.onmousedown = (event) => {
@@ -167,7 +231,7 @@ window.onmousedown = (event) => {
 
 window.onmouseup = (event) => {
   isMoving = false;
-  
+
   currentBody.isSleeping = false;
       disableAction = true;
 
@@ -176,6 +240,7 @@ window.onmouseup = (event) => {
         disableAction = false;
       }, 1000);
 }
+*/
 
 /* 키보드 이벤트 처리 */
 window.onkeydown = (event) => {
