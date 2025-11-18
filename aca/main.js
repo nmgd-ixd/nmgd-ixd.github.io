@@ -136,6 +136,7 @@ let interval = null;
 
 // Matter.js Mouse Constraint 추가
 
+/*
 // 캔버스에 마우스 입력 바인딩
 const mouse = Mouse.create(render.canvas);
 
@@ -164,24 +165,26 @@ World.add(world, mouseConstraint);
 // beforeUpdate 이벤트에 핸들러 등록
 /*Events.on(engine, 'beforeUpdate', function() {
     // 마우스가 바디를 잡고 있을 때만 y 위치를 고정
-    if (mouseConstraint.body === constrainedBody) {
+    if (mouseConstraint.body === currentBody) {
         // 초기 y 위치 또는 고정하려는 특정 y 위치로 설정
-        Matter.Body.setPosition(constrainedBody, { 
-            x: constrainedBody.position.x, 
+        Matter.Body.setPosition(currentBody, { 
+            x: currentBody.position.x, 
             y: 100 // 고정하려는 y 좌표
         });
     }
-});*/
+});
+
 
 // 드래그 시작 이벤트
 Matter.Events.on(mouseConstraint, 'startdrag', function(event) {
-    console.log('드래그 시작:', event.body.id);
+    console.log('드래그 시작:', event.body.x);
 });
 
 // 드래그 종료 이벤트
 Matter.Events.on(mouseConstraint, 'enddrag', function(event) {
     console.log('드래그 종료:', event.body.id);
-    currentBody.isSleeping = false;
+
+          currentBody.isSleeping = false;
       disableAction = true;
 
       setTimeout(() => {
@@ -189,7 +192,7 @@ Matter.Events.on(mouseConstraint, 'enddrag', function(event) {
         disableAction = false;
       }, 1000);
 });
-
+*/
 
 
 
@@ -215,12 +218,12 @@ function addFruit() {
 }
 
 
-/*
+
 window.onmousemove = (event) => {
   if(isMoving) {
     Body.setPosition(currentBody, {
             x: event.clientX,
-            y: currentBody.position.y,
+            y: 50,
           });
   }
 }
@@ -240,7 +243,10 @@ window.onmouseup = (event) => {
         disableAction = false;
       }, 1000);
 }
-*/
+
+
+
+
 
 /* 키보드 이벤트 처리 */
 window.onkeydown = (event) => {
