@@ -62,6 +62,9 @@ let FRUITS = ITEMS_ACA;
 
 const scoreText = document.getElementById('score');
 
+
+let isMoving = false;
+
 // 캔버스 크기
 const cw = 712;
 const ch = 1138;
@@ -145,6 +148,36 @@ function addFruit() {
   World.add(world, body);
 }
 
+window.onmousemove = (event) => {
+  if(isMoving) {
+    Body.setPosition(currentBody, {
+            x: event.clientX,
+            y: currentBody.position.y,
+          });
+  }
+  /*Body.setPosition(currentBody, {
+            x: event.clientX,
+            y: currentBody.position.y,
+          });*/
+}
+
+window.onmousedown = (event) => {
+  isMoving = true;
+}
+
+window.onmouseup = (event) => {
+  isMoving = false;
+  
+  currentBody.isSleeping = false;
+      disableAction = true;
+
+      setTimeout(() => {
+        addFruit();
+        disableAction = false;
+      }, 1000);
+}
+
+/* 키보드 이벤트 처리 */
 window.onkeydown = (event) => {
   if (disableAction) {
     return;
