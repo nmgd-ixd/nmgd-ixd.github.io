@@ -82,6 +82,12 @@ const lineColor = "#E6B143";
 
 let score = 0;
 
+// 새로운 아이템 생성 위치
+const nx = 150;
+const ny = 100;
+
+// 클릭 후 아이템 생성 위치 y값
+const sy = 300;
 
 
 const engine = Engine.create();
@@ -197,12 +203,12 @@ Matter.Events.on(mouseConstraint, 'enddrag', function(event) {
 
 
 
-
+/*** 새로운 랜덤 아이템 추가 *******/
 function addFruit() {
   const index = Math.floor(Math.random() * 5);
   const fruit = FRUITS[index];
 
-  const body = Bodies.circle(300, 50, fruit.radius, {
+  const body = Bodies.circle(nx, ny, fruit.radius, {
     index: index,
     isSleeping: true,
     render: {
@@ -229,25 +235,32 @@ window.onmousemove = (event) => {
 }
 */
 
+/*** 마우스/터치 이벤트 처리 *******/
 window.onmousedown = (event) => {
-  isMoving = true;
+  if (disableAction) {
+    return;
+  }
 
   Body.setPosition(currentBody, {
-            x: event.clientX,
-            y: 50,
-          });
+    x: event.clientX,
+    y: sy,
+  });
+
+  Render.run();
 }
 
 window.onmouseup = (event) => {
-  isMoving = false;
+  if (disableAction) {
+    return;
+  }
 
   currentBody.isSleeping = false;
-      disableAction = true;
+  disableAction = true;
 
-      setTimeout(() => {
-        addFruit();
-        disableAction = false;
-      }, 1000);
+  setTimeout(() => {
+    addFruit();
+    disableAction = false;
+  }, 1000);
 }
 
 
