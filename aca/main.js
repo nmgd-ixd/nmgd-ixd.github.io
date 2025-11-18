@@ -218,7 +218,7 @@ function addFruit() {
 }
 
 
-
+/*
 window.onmousemove = (event) => {
   if(isMoving) {
     Body.setPosition(currentBody, {
@@ -227,9 +227,15 @@ window.onmousemove = (event) => {
           });
   }
 }
+*/
 
 window.onmousedown = (event) => {
   isMoving = true;
+
+  Body.setPosition(currentBody, {
+            x: event.clientX,
+            y: 50,
+          });
 }
 
 window.onmouseup = (event) => {
